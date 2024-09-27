@@ -1,17 +1,15 @@
 import { request } from "/@/utils/service";
-import XEUtils from "xe-utils";
+
 /**
  * 获取角色的授权列表
  * @param roleId
  * @param query
  */
-export function getRolePermission(query:object) {
+export function getRolePremission(query:object) {
   return request({
-    url: '/api/system/role_menu_button_permission/get_role_permission/',
+    url: '/api/system/role_menu_button_permission/get_role_premission/',
     method: 'get',
     params:query
-  }).then((res:any)=>{
-    return XEUtils.toArrayTree(res.data, {key: 'id', parentKey: 'parent',children: 'children',strict: false})
   })
 }
 
@@ -28,25 +26,16 @@ export function setRolePremission(roleId:any,data:object) {
   })
 }
 
-export function getDataPermissionRange(query:object) {
-  return request({
-    url: '/api/system/role_menu_button_permission/data_scope/',
-    method: 'get',
-    params:query
-  })
-}
-
-export function getDataPermissionRangeAll() {
+export function getDataPermissionRange() {
   return request({
     url: '/api/system/role_menu_button_permission/data_scope/',
     method: 'get',
   })
 }
-export function getDataPermissionDept(query:object) {
+export function getDataPermissionDept() {
   return request({
     url: '/api/system/role_menu_button_permission/role_to_dept_all/',
-    method: 'get',
-    params:query
+    method: 'get'
   })
 }
 

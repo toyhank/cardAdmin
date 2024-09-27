@@ -63,6 +63,7 @@ INSTALLED_APPS = [
 ]
 My_Apps = [
 	'orders',  #新的应用写在这里
+    'card_shop'
 ]
 
 INSTALLED_APPS += My_Apps

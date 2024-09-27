@@ -123,7 +123,7 @@ const handleFileSuccess=function (response:any, file:any, fileList:any) {
     }
   }).then((response:any) => {
     loading.value = false
-    ElMessageBox.alert('成功', '导入完成', {
+    ElMessageBox.alert('导入成功', '导入完成', {
       confirmButtonText: 'OK',
       callback: (action: Action) => {
         refreshView()

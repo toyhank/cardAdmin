@@ -200,9 +200,11 @@ export const createCrudOptions = function ({crudExpose}: CreateCrudOptionsProps)
                         component: {
                             span: 24,
                             props: {
-                                allowCreate: true,
-                                filterable: true,
-                                clearable: true,
+                                elProps: {
+                                    allowCreate: true,
+                                    filterable: true,
+                                    clearable: true,
+                                },
                             },
                         },
                         itemProps: {

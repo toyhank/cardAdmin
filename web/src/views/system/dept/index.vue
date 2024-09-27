@@ -133,7 +133,7 @@ onMounted(() => {
 }
 
 .dept-left {
-	background-color: var(--el-fill-color-blank);;
+	background-color: #fff;
 	border-radius: 0 8px 8px 0;
 	padding: 10px;
 }

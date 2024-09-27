@@ -218,10 +218,7 @@ export const createCrudOptions = function ({crudExpose}: CreateCrudOptionsProps)
                         label: 'name'
                     }),
                     column: {
-                        minWidth: 200, //最小列宽
-                        formatter({value,row,index}){
-                            return row.dept_name_all
-                        }
+                        minWidth: 150, //最小列宽
                     },
                     form: {
                         rules: [
@@ -256,11 +253,7 @@ export const createCrudOptions = function ({crudExpose}: CreateCrudOptionsProps)
                         label: 'name',
                     }),
                     column: {
-                        minWidth: 200, //最小列宽
-                        formatter({value,row,index}){
-                            const values = row.role_info.map((item:any) => item.name);
-                            return values.join(',')
-                        }
+                        minWidth: 100, //最小列宽
                     },
                     form: {
                         rules: [

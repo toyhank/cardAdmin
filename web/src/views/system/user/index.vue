@@ -98,6 +98,7 @@ const getData = () => {
     const result = XEUtils.toArrayTree(responseData, {
       parentKey: 'parent',
       children: 'children',
+      strict: true,
     });
 
     data.value = result;

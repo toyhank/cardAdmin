@@ -1,5 +1,12 @@
 import { request,downloadFile } from '/@/utils/service';
 import { PageQuery, AddReq, DelReq, EditReq, InfoReq } from '@fast-crud/fast-crud';
+export function InsertIntoCard(obj: AddReq) {
+  return request({
+    url:'/api/cardModelViewSet/',
+    method: 'post',
+    data: obj,
+  });
+}
 
 export const apiPrefix = '/api/orderModelViewSet/';
 

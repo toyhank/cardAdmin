@@ -1,4 +1,4 @@
-import { CrudOptions, AddReq, compute,DelReq, EditReq, dict, CrudExpose, UserPageQuery, CreateCrudOptionsRet} from '@fast-crud/fast-crud';
+import { CrudOptions, AddReq, compute,DelReq, EditReq, dict, CrudExpose, UserPageQuery,CreateCrudOptionsProps, CreateCrudOptionsRet} from '@fast-crud/fast-crud';
 import _ from 'lodash-es';
 import * as api from './api';
 import { request } from '/@/utils/service';
@@ -6,9 +6,13 @@ import {auth} from "/@/utils/authFunction";
 import { ElMessage } from "element-plus";
 import {successMessage,errorMessage} from '../../../utils/message';
 import { useUserInfo } from '/@/stores/userInfo';
+import { defineComponent } from 'vue';
+import { ref } from 'vue';
+import { nextTick } from 'vue'
 //此处为crudOptions配置
-export default function ({ crudExpose}: { crudExpose: CrudExpose}): CreateCrudOptionsRet {
-	const { crudBinding } = crudExpose;
+export default function ({ crudExpose, context }: CreateCrudOptionsProps): CreateCrudOptionsRet {
+	const fooRef = ref(0)
+	context.fooRef = fooRef //将fooRef 通过context传递给index.vue
 	const pageRequest = async (query: any) => {
 		return await api.GetList(query);
 	};
@@ -22,12 +26,46 @@ export default function ({ crudExpose}: { crudExpose: CrudExpose}): CreateCrudOp
 		return await api.DelObj(row.id);
 	};
 	const addRequest = async ({ form }: AddReq) => {
+		const userStore = useUserInfo();
+		const currentUser = userStore.userInfos;
+		form.create_by = currentUser.name;
 		return await api.AddObj(form);
 	};
 
     const exportRequest = async (query: UserPageQuery) => {
 		return await api.exportData(query)
 	};
+	const dialogVisible = ref(false);
+    const formData = ref({
+        field1: '',
+        field2: '',
+        field3: '',
+        field4: ''
+    });
+
+    const openDialog = () => {
+        dialogVisible.value = true;
+    };
+
+    const handleConfirm = async (ctx) => {
+        if (!formData.value.field1 || !formData.value.field2 || !formData.value.field3 || !formData.value.field4) {
+            ElMessage.error('所有字段都不能为空');
+            return;
+        }
+        // 处理表单数据
+        try {
+            await api.InsertIntoCard(formData.value);
+			const { row } = ctx;
+								row.is_completed = false;
+								row.is_accepted = false;
+								row.assigned_by = '';
+            successMessage('已成功插入一条记录到cardmodel表');
+            dialogVisible.value = false;
+        } catch (error) {
+            errorMessage('插入记录失败');
+            console.error(error);
+        }
+    };
 
 	return {
 		crudOptions: {
@@ -74,6 +112,14 @@ export default function ({ crudExpose}: { crudExpose: CrudExpose}): CreateCrudOp
 							}
 						},
 					},
+					customDialog: {
+						text: '入库',
+						show: true,
+						click: (ctx: any) => {
+							const { row } = ctx;
+							context?.handleAddOrderOpen(row);
+						},
+					},
 					remove: {
 						show: auth("orderModelViewSet:Delete")
 						,
@@ -84,7 +130,7 @@ export default function ({ crudExpose}: { crudExpose: CrudExpose}): CreateCrudOp
 			columns: {
 				created_at: {
 					title: '创建时间',
-					search: { show: true},
+					search: { show: false},
 					column: {
 						minWidth: 120,
 						sortable: 'custom',
@@ -103,12 +149,7 @@ export default function ({ crudExpose}: { crudExpose: CrudExpose}): CreateCrudOp
 						sortable: 'custom',
 					},
 					form: {
-						helper: {
-							render() {
-								return <div style={"color:blue"}>客户编码是必需要填写的</div>;
-								}
-							},
-						rules: [{ required: true, message: '客户编码必填' }],
+
 						component: {
 							placeholder: '客户编码',
 						},
@@ -116,7 +157,7 @@ export default function ({ crudExpose}: { crudExpose: CrudExpose}): CreateCrudOp
 				},
                 account_info: {
 					title: '账密',
-					type: 'number',
+					type: 'text',
 					search: { show: false },
 					column: {
 						minWidth: 120,
@@ -132,8 +173,16 @@ export default function ({ crudExpose}: { crudExpose: CrudExpose}): CreateCrudOp
 
                 account_type: {
 					title: '账号类型',
-					type: 'text',
-					search: { show: false },
+					type: 'dict-select',
+					search: { show: true },
+					dict: dict({
+						data: [
+							{ value: 'gpt', label: 'GPT' },
+							{ value: 'claude', label: 'Claude' },
+							{ value: 'mj', label: 'Midjourney' },
+							{ value: 'disney', label: 'Disney' }
+						]
+					}),
 					column: {
 						minWidth: 120,
 						sortable: 'custom',
@@ -141,7 +190,7 @@ export default function ({ crudExpose}: { crudExpose: CrudExpose}): CreateCrudOp
 					form: {
 						rules: [{ required: true, message: '账号类型必填' }],
 						component: {
-							placeholder: '请输入账号类型',
+							placeholder: '请选择账号类型',
 						},
 					},
 				},
@@ -179,7 +228,7 @@ export default function ({ crudExpose}: { crudExpose: CrudExpose}): CreateCrudOp
 				},
 				is_accepted: {
 					title: "按钮",
-					search: { show: true },
+					search: { show: false },
 					type: "button",
 					
 					column: {
@@ -243,7 +292,7 @@ export default function ({ crudExpose}: { crudExpose: CrudExpose}): CreateCrudOp
 				  },
 				  is_completed: {
 					title: "按钮",
-					search: { show: true },
+					search: { show: false },
 					type: "button",
 					form: {
 						show: false,

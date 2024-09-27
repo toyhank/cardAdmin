@@ -3,10 +3,16 @@ from django.contrib.auth.models import User
 from django.conf import settings
 
 class orderModel(models.Model):
-    customer_id = models.CharField(max_length=100, verbose_name='客户编号')
+    customer_id = models.CharField(default="",null=True, blank=True,max_length=100, verbose_name='客户编号')
     create_by = models.CharField(null=True, blank=True,default="",max_length=100, verbose_name='创建人')
     account_info = models.CharField(max_length=100, verbose_name='账密')
-    account_type = models.CharField(max_length=100, verbose_name='账号种类')
+    ACCOUNT_TYPE_CHOICES = [
+        ('gpt', 'GPT'),
+        ('claude', 'Claude'),
+        ('mj', 'Midjourney'),
+        ('disney', 'Disney'),
+    ]
+    account_type = models.CharField(max_length=100, choices=ACCOUNT_TYPE_CHOICES, verbose_name='账号种类')
     assigned_by = models.CharField(default="",null=True, blank=True,max_length=100, verbose_name='接单人')
     is_completed = models.BooleanField(default=False, verbose_name='完结')
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='创建时间')
