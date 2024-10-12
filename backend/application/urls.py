@@ -126,6 +126,9 @@ My_Urls = (
 	[	#这里的crud_demo是指django创建的应用名称crud_demo
         path('',include('orders.urls')),
         path('',include('card_shop.urls')),
+        path('',include('order_type.urls')),
+        path('',include('ticket_system.urls')),
+        path('',include('commission_system.urls')),
     ]
 )
 

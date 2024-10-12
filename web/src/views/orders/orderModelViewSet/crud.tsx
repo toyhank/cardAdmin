@@ -176,12 +176,18 @@ export default function ({ crudExpose, context }: CreateCrudOptionsProps): Creat
 					type: 'dict-select',
 					search: { show: true },
 					dict: dict({
-						data: [
-							{ value: 'gpt', label: 'GPT' },
-							{ value: 'claude', label: 'Claude' },
-							{ value: 'mj', label: 'Midjourney' },
-							{ value: 'disney', label: 'Disney' }
-						]
+						getData: async () => {
+							const res = await request({
+								url: '/api/orderTypeModelViewSet/',
+								method: 'get'
+							});
+							return res.data.map((item: any) => ({
+								value: item.order_type_string,
+								label: item.order_type_string
+							}));
+						},
+						immediate: true,
+						cache: true
 					}),
 					column: {
 						minWidth: 120,
@@ -236,7 +242,6 @@ export default function ({ crudExpose, context }: CreateCrudOptionsProps): Creat
 						disabled: compute(({ row }) => {
 							const userStore = useUserInfo();
 							const currentUser = userStore.userInfos;
-							console.log(row.only_assigned_to);
 							if(!row.only_assigned_to)
 								return false;
 							else if(row.only_assigned_to !== currentUser.username)
@@ -310,27 +315,35 @@ export default function ({ crudExpose, context }: CreateCrudOptionsProps): Creat
 						  },
 						on: {
 						  // 注意：必须要on前缀
-						  click: (ctx: any) => { 
+						  click: async (ctx: any) => { 
 							const { row } = ctx;
-							row.is_completed = true;
-							row.copleted_at = new Date().toISOString();
 							const userStore = useUserInfo();
-
 							const currentUser = userStore.userInfos;
-							console.log(currentUser);
+							
 							if (!currentUser) {
 							  errorMessage("请先登录");
 							  return;
 							}
-							row.completed_by = currentUser.id; // 假设用户ID存储在id字段
-							console.log(ctx)
 						
-                                    api.UpdateObj(row).then((res: APIResponseData) => {
+							if (!row.is_accepted) {
+							  errorMessage("请先接单后再完成");
+							  return;
+							}
+							
+							try {
+							  row.is_completed = true;
+							  row.completed_at = new Date().toISOString();
+							  row.completed_by = currentUser.username;
+							  
+							  const res = await api.UpdateObj(row);
                                         successMessage(res.msg as string);
-                                    })
+							} catch (error) {
+							  errorMessage("完成操作失败");
+							  console.error(error);
 						   }
 						}
 					  }
+					}
 					}
 				  },
 			only_assigned_to: {

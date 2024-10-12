@@ -1,15 +1,17 @@
-import { CrudOptions, AddReq, compute,DelReq, EditReq, dict, CrudExpose, UserPageQuery, CreateCrudOptionsRet} from '@fast-crud/fast-crud';
+import { CrudOptions, AddReq, compute,DelReq, EditReq, dict, CrudExpose, UserPageQuery, CreateCrudOptionsRet,CreateCrudOptionsProps} from '@fast-crud/fast-crud';
 import _ from 'lodash-es';
 import * as api from './api';
 import { request } from '/@/utils/service';
 import {auth} from "/@/utils/authFunction";
+import { ref } from 'vue';
 import { ElMessage,ElMessageBox } from "element-plus";
 import {successMessage,errorMessage} from '../../../utils/message';
 import { useUserInfo } from '/@/stores/userInfo';
 import { TrophyBase } from '@element-plus/icons-vue/dist/types';
 //此处为crudOptions配置
-export default function ({ crudExpose}: { crudExpose: CrudExpose}): CreateCrudOptionsRet {
-	const { crudBinding } = crudExpose;
+export default function ({ crudExpose, context }: CreateCrudOptionsProps): CreateCrudOptionsRet {
+	const fooRef = ref(0)
+	context.fooRef = fooRef //将fooRef 通过context传递给index.vue
 	const pageRequest = async (query: any) => {
 		return await api.GetList(query);
 	};
@@ -65,36 +67,9 @@ export default function ({ crudExpose}: { crudExpose: CrudExpose}): CreateCrudOp
 					outbound: {
 						text: '出库',
 						show: true,
-						click: async (ctx) => {
-							try {
-								const { row } = ctx;
-								const { value: outboundRemark } = await ElMessageBox.prompt(
-									'请输入出库备注',
-									'出库',
-									{
-									  confirmButtonText: '确定',
-									  cancelButtonText: '取消',
-									  inputValidator: (value) => {
-										if (!value) {
-										  return '备注不能为空';
-										}
-										return true;
-									  },
-									}
-								);
-								row.status = '已出库';
-								const userStore = useUserInfo();
-								const currentUser = userStore.userInfos;
-								row.delivered_by = currentUser.name;
-								row.memo = outboundRemark;
-								await api.UpdateObj(row);
-								successMessage('订单已出库');
-							} catch (error) {
-								if (error !== 'cancel') {
-									errorMessage('订单出库失败');
-									console.error(error);
-								}
-							}
+						click: (ctx: any) => {
+							const { row } = ctx;
+							context?.handleOutboundCardOpen(row);
 						},
 					},
 				},
@@ -164,8 +139,20 @@ export default function ({ crudExpose}: { crudExpose: CrudExpose}): CreateCrudOp
 						show: false,
 					},
 				},
-				memo: {
-					title: '出库备注',
+				sales_destination: {
+					title: '出库去向',
+					type: 'text',
+					search: { show: true},
+					column: {
+						minWidth: 120,
+						sortable: 'custom',
+					},
+					form: {
+						show: false,
+					},
+				},
+				sales: {
+					title: '金额',
 					type: 'text',
 					search: { show: true},
 					column: {
@@ -210,12 +197,18 @@ export default function ({ crudExpose}: { crudExpose: CrudExpose}): CreateCrudOp
 					type: 'dict-select',
 					search: { show: true },
 					dict: dict({
-						data: [
-							{ value: 'gpt', label: 'GPT' },
-							{ value: 'claude', label: 'Claude' },
-							{ value: 'mj', label: 'Midjourney' },
-							{ value: 'disney', label: 'Disney' }
-						]
+						getData: async () => {
+							const res = await request({
+								url: '/api/orderTypeModelViewSet/',
+								method: 'get'
+							});
+							return res.data.map((item: any) => ({
+								value: item.id,
+								label: item.order_type_string
+							}));
+						},
+						immediate: true,
+						cache: true
 					}),
 					column: {
 						minWidth: 120,

@@ -12,7 +12,8 @@ class cardModel(models.Model):
     account_info = models.CharField(max_length=100, verbose_name='账密')
     account_type = models.CharField(max_length=100, verbose_name='账号种类')
     status = models.CharField(null=True, blank=True,default="未出库",max_length=100, verbose_name='状态')
-    memo = models.CharField(null=True, blank=True,default="",max_length=100, verbose_name='出库备注')
+    sales_destination = models.CharField(null=True, blank=True,default="",max_length=100, verbose_name='销售去向')
+    sales = models.CharField(null=True, blank=True,default="",max_length=100, verbose_name='销售额')
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='创建时间')
 
     def __str__(self):

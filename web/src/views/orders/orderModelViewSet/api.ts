@@ -57,3 +57,11 @@ export function exportData(params:any){
 }
 
 
+export function getOrderNumber(){
+	return request({
+		url:apiPrefix + 'statistics/',
+		method: 'get'
+	  });
+}
+
+

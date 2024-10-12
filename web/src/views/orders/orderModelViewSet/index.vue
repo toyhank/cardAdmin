@@ -85,9 +85,7 @@ import { useFs } from '@fast-crud/fast-crud';
 import { ElMessage } from 'element-plus';
 import createCrudOptions from './crud';
 import importExcel from '/@/components/importExcel/index.vue'
-import { InsertIntoCard} from './api';
-
-
+import { InsertIntoCard,getOrderNumber} from './api';
 const addOrderVisible = ref(false);
 const addOrderForm = reactive({
   walletNo: '',
@@ -129,8 +127,20 @@ const handleAddOrderSubmit = async () => {
 };
 
 
-const totalOrders = ref(1200);
-const todayOrders = ref(1);
+const totalOrders = ref(0);
+const todayOrders = ref(0);
+
+onMounted(async () => {
+  try {
+    let orders = await getOrderNumber();
+
+    totalOrders.value = orders.total_orders;
+    todayOrders.value = orders.today_orders;
+  } catch (error) {
+    console.error('获取订单数据失败:', error);
+    ElMessage.error('获取订单数据失败');
+  }
+});
 const dialogVisible = ref(false);
 const context: any = {
 		handleAddOrderOpen

@@ -41,6 +41,42 @@ from rest_framework.permissions import AllowAny  # 导入所需权限类
 #         ]
 
 
+class ImportCardSerializer(cardModelSerializer):
+    """
+    部门-导入-序列化器
+    """
+
+    class Meta:
+        model = cardModel
+        fields = '__all__'
+        read_only_fields = ["id"]
+
+class ExportCardModelSerializer(cardModelSerializer):
+    """
+    订单导出序列化器
+    """
+
+    walletNo = serializers.CharField(read_only=True)
+    cardNo = serializers.CharField(read_only=True)
+    cardId = serializers.CharField(read_only=True)
+    created_by = serializers.CharField(read_only=True)
+    delivered_by = serializers.CharField(read_only=True)
+    account_info = serializers.CharField(read_only=True)
+    account_type = serializers.CharField(read_only=True)
+    status = serializers.CharField(read_only=True)
+    sales_destination = serializers.CharField(read_only=True)
+    sales = serializers.CharField(read_only=True)
+    created_at = serializers.CharField(read_only=True)
+
+
+    class Meta:
+        model = cardModel
+        fields = [
+            'walletNo','cardNo','cardId','created_by','delivered_by','account_info','account_type','status','sales_destination', 'sales','created_at'
+        ]
+
+
+
 class cardModelViewSet(CustomModelViewSet):
     """
     list:查询
@@ -54,9 +90,21 @@ class cardModelViewSet(CustomModelViewSet):
     create_serializer_class = cardModelCreateUpdateSerializer
     update_serializer_class = cardModelCreateUpdateSerializer
     permission_classes = [AllowAny]
-    #export_serializer_class = ExportcardModelSerializer
+    export_serializer_class = ExportCardModelSerializer
+    import_serializer_class = ImportCardSerializer
 
     export_field_label = {
+        'created_at': '创建时间',
+        'account_info': '账密',
+        'account_type': '账号种类',
+        'walletNo':'钱包编号',
+        'cardNo': '卡号',
+        'id': 'id',
+        'created_by': '创建人',
+    }
+
+    
+    import_field_dict = {
         'created_at': '创建时间',
         'account_info': '账密',
         'account_type': '账号种类',
