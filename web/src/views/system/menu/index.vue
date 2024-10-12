@@ -16,12 +16,12 @@
 			<el-col :span="18">
         <el-tabs type="border-card">
           <el-tab-pane label="按钮权限配置" >
-            <div style="height: 72vh">
+            <div style="height: 80vh">
               <MenuButtonCom ref="menuButtonRef" />
             </div>
           </el-tab-pane>
           <el-tab-pane label="列权限配置">
-            <div style="height: 72vh">
+            <div style="height: 80vh">
               <MenuFieldCom ref="menuFieldRef"></MenuFieldCom>
             </div>
           </el-tab-pane>
@@ -138,7 +138,7 @@ onMounted(() => {
 .menu-box {
 	height: 100%;
 	padding: 10px;
-	background-color: var(--el-fill-color-blank);;
+	background-color: #fff;
 	box-sizing: border-box;
 }
 

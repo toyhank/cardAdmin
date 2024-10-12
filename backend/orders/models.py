@@ -1,9 +1,10 @@
 from django.db import models
 from django.contrib.auth.models import User
 from django.conf import settings
+from django.utils import timezone
 
 class orderModel(models.Model):
-    customer_id = models.CharField(max_length=100, verbose_name='客户编号')
+    customer_id = models.CharField(default="",null=True, blank=True,max_length=100, verbose_name='客户编号')
     create_by = models.CharField(null=True, blank=True,default="",max_length=100, verbose_name='创建人')
     account_info = models.CharField(max_length=100, verbose_name='账密')
     account_type = models.CharField(max_length=100, verbose_name='账号种类')
@@ -22,9 +23,19 @@ class orderModel(models.Model):
 
     priority = models.CharField(max_length=100, choices=PRIORITY_CHOICES, default='普通', verbose_name='优先级')
     only_assigned_to = models.CharField(max_length=100, blank=True, null=True,default='',verbose_name='指定接单人')
+    
     def __str__(self):
         return f"订单 {self.customer_id}"
 
     class Meta:
         verbose_name = '订单'
         verbose_name_plural = '订单列表'
+
+    @classmethod
+    def get_total_orders(cls):
+        return cls.objects.count()
+
+    @classmethod
+    def get_today_orders(cls):
+        today = timezone.now().date()
+        return cls.objects.filter(created_at__date=today).count()

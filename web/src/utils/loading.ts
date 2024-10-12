@@ -1,7 +1,5 @@
 import { nextTick } from 'vue';
 import '/@/theme/loading.scss';
-import { showUpgrade } from "/@/utils/upgrade";
-
 
 /**
  * 页面全局 Loading
@@ -11,8 +9,6 @@ import { showUpgrade } from "/@/utils/upgrade";
 export const NextLoading = {
 	// 创建 loading
 	start: () => {
-		// 显示升级提示
-		showUpgrade()
 		const bodys: Element = document.body;
 		const div = <HTMLElement>document.createElement('div');
 		div.setAttribute('class', 'loading-next');

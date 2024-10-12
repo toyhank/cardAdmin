@@ -6,6 +6,10 @@ from rest_framework import serializers
 from orders.serializers import orderModelSerializer, orderModelCreateUpdateSerializer
 from dvadmin.utils.viewset import CustomModelViewSet
 from rest_framework.permissions import AllowAny  # 导入所需权限类
+
+from rest_framework.decorators import action
+from rest_framework.response import Response
+
 # @login_required
 # def order_list(request):
 #     orders = Order.objects.all()
@@ -37,7 +41,15 @@ from rest_framework.permissions import AllowAny  # 导入所需权限类
 #         order.is_completed = True
 #         order.save()
 #     return redirect('order_list')
+class ImportOrderSerializer(orderModelSerializer):
+    """
+    部门-导入-序列化器
+    """
 
+    class Meta:
+        model = orderModel
+        fields = '__all__'
+        read_only_fields = ["id"]
 
 class ExportOrderModelSerializer(orderModelSerializer):
     """
@@ -86,6 +98,7 @@ class orderModelViewSet(CustomModelViewSet):
     update_serializer_class = orderModelCreateUpdateSerializer
     permission_classes = [AllowAny]
     export_serializer_class = ExportOrderModelSerializer
+    import_serializer_class = ImportOrderSerializer
 
     export_field_label = {
         'created_at': '创建时间',
@@ -100,4 +113,13 @@ class orderModelViewSet(CustomModelViewSet):
         'assigned_at': '接单时间',
         'completed_at': '完成时间'
     }
+
+    @action(detail=False, methods=['get'])
+    def statistics(self, request):
+        total_orders = orderModel.get_total_orders()
+        today_orders = orderModel.get_today_orders()
+        return Response({
+            'total_orders': total_orders,
+            'today_orders': today_orders
+        })
 

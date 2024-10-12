@@ -1,4 +1,4 @@
-import { CrudOptions, AddReq, compute,DelReq, EditReq, dict, CrudExpose, UserPageQuery, CreateCrudOptionsRet} from '@fast-crud/fast-crud';
+import { CrudOptions, AddReq, compute,DelReq, EditReq, dict, CrudExpose, UserPageQuery,CreateCrudOptionsProps, CreateCrudOptionsRet} from '@fast-crud/fast-crud';
 import _ from 'lodash-es';
 import * as api from './api';
 import { request } from '/@/utils/service';
@@ -6,9 +6,13 @@ import {auth} from "/@/utils/authFunction";
 import { ElMessage } from "element-plus";
 import {successMessage,errorMessage} from '../../../utils/message';
 import { useUserInfo } from '/@/stores/userInfo';
+import { defineComponent } from 'vue';
+import { ref } from 'vue';
+import { nextTick } from 'vue'
 //此处为crudOptions配置
-export default function ({ crudExpose}: { crudExpose: CrudExpose}): CreateCrudOptionsRet {
-	const { crudBinding } = crudExpose;
+export default function ({ crudExpose, context }: CreateCrudOptionsProps): CreateCrudOptionsRet {
+	const fooRef = ref(0)
+	context.fooRef = fooRef //将fooRef 通过context传递给index.vue
 	const pageRequest = async (query: any) => {
 		return await api.GetList(query);
 	};
@@ -22,12 +26,46 @@ export default function ({ crudExpose}: { crudExpose: CrudExpose}): CreateCrudOp
 		return await api.DelObj(row.id);
 	};
 	const addRequest = async ({ form }: AddReq) => {
+		const userStore = useUserInfo();
+		const currentUser = userStore.userInfos;
+		form.create_by = currentUser.name;
 		return await api.AddObj(form);
 	};
 
     const exportRequest = async (query: UserPageQuery) => {
 		return await api.exportData(query)
 	};
+	const dialogVisible = ref(false);
+    const formData = ref({
+        field1: '',
+        field2: '',
+        field3: '',
+        field4: ''
+    });
+
+    const openDialog = () => {
+        dialogVisible.value = true;
+    };
+
+    const handleConfirm = async (ctx) => {
+        if (!formData.value.field1 || !formData.value.field2 || !formData.value.field3 || !formData.value.field4) {
+            ElMessage.error('所有字段都不能为空');
+            return;
+        }
+        // 处理表单数据
+        try {
+            await api.InsertIntoCard(formData.value);
+			const { row } = ctx;
+								row.is_completed = false;
+								row.is_accepted = false;
+								row.assigned_by = '';
+            successMessage('已成功插入一条记录到cardmodel表');
+            dialogVisible.value = false;
+        } catch (error) {
+            errorMessage('插入记录失败');
+            console.error(error);
+        }
+    };
 
 	return {
 		crudOptions: {
@@ -74,6 +112,14 @@ export default function ({ crudExpose}: { crudExpose: CrudExpose}): CreateCrudOp
 							}
 						},
 					},
+					customDialog: {
+						text: '入库',
+						show: true,
+						click: (ctx: any) => {
+							const { row } = ctx;
+							context?.handleAddOrderOpen(row);
+						},
+					},
 					remove: {
 						show: auth("orderModelViewSet:Delete")
 						,
@@ -84,7 +130,7 @@ export default function ({ crudExpose}: { crudExpose: CrudExpose}): CreateCrudOp
 			columns: {
 				created_at: {
 					title: '创建时间',
-					search: { show: true},
+					search: { show: false},
 					column: {
 						minWidth: 120,
 						sortable: 'custom',
@@ -103,12 +149,7 @@ export default function ({ crudExpose}: { crudExpose: CrudExpose}): CreateCrudOp
 						sortable: 'custom',
 					},
 					form: {
-						helper: {
-							render() {
-								return <div style={"color:blue"}>客户编码是必需要填写的</div>;
-								}
-							},
-						rules: [{ required: true, message: '客户编码必填' }],
+
 						component: {
 							placeholder: '客户编码',
 						},
@@ -116,7 +157,7 @@ export default function ({ crudExpose}: { crudExpose: CrudExpose}): CreateCrudOp
 				},
                 account_info: {
 					title: '账密',
-					type: 'number',
+					type: 'text',
 					search: { show: false },
 					column: {
 						minWidth: 120,
@@ -132,8 +173,22 @@ export default function ({ crudExpose}: { crudExpose: CrudExpose}): CreateCrudOp
 
                 account_type: {
 					title: '账号类型',
-					type: 'text',
-					search: { show: false },
+					type: 'dict-select',
+					search: { show: true },
+					dict: dict({
+						getData: async () => {
+							const res = await request({
+								url: '/api/orderTypeModelViewSet/',
+								method: 'get'
+							});
+							return res.data.map((item: any) => ({
+								value: item.order_type_string,
+								label: item.order_type_string
+							}));
+						},
+						immediate: true,
+						cache: true
+					}),
 					column: {
 						minWidth: 120,
 						sortable: 'custom',
@@ -141,7 +196,7 @@ export default function ({ crudExpose}: { crudExpose: CrudExpose}): CreateCrudOp
 					form: {
 						rules: [{ required: true, message: '账号类型必填' }],
 						component: {
-							placeholder: '请输入账号类型',
+							placeholder: '请选择账号类型',
 						},
 					},
 				},
@@ -179,7 +234,7 @@ export default function ({ crudExpose}: { crudExpose: CrudExpose}): CreateCrudOp
 				},
 				is_accepted: {
 					title: "按钮",
-					search: { show: true },
+					search: { show: false },
 					type: "button",
 					
 					column: {
@@ -187,7 +242,6 @@ export default function ({ crudExpose}: { crudExpose: CrudExpose}): CreateCrudOp
 						disabled: compute(({ row }) => {
 							const userStore = useUserInfo();
 							const currentUser = userStore.userInfos;
-							console.log(row.only_assigned_to);
 							if(!row.only_assigned_to)
 								return false;
 							else if(row.only_assigned_to !== currentUser.username)
@@ -243,7 +297,7 @@ export default function ({ crudExpose}: { crudExpose: CrudExpose}): CreateCrudOp
 				  },
 				  is_completed: {
 					title: "按钮",
-					search: { show: true },
+					search: { show: false },
 					type: "button",
 					form: {
 						show: false,
@@ -261,25 +315,33 @@ export default function ({ crudExpose}: { crudExpose: CrudExpose}): CreateCrudOp
 						  },
 						on: {
 						  // 注意：必须要on前缀
-						  click: (ctx: any) => { 
+						  click: async (ctx: any) => { 
 							const { row } = ctx;
-							row.is_completed = true;
-							row.copleted_at = new Date().toISOString();
 							const userStore = useUserInfo();
-
 							const currentUser = userStore.userInfos;
-							console.log(currentUser);
+							
 							if (!currentUser) {
 							  errorMessage("请先登录");
 							  return;
 							}
-							row.completed_by = currentUser.id; // 假设用户ID存储在id字段
-							console.log(ctx)
-						
-                                    api.UpdateObj(row).then((res: APIResponseData) => {
-                                        successMessage(res.msg as string);
-                                    })
-						   }
+							
+							if (!row.is_accepted) {
+							  errorMessage("请先接单后再完成");
+							  return;
+							}
+							
+							try {
+							  row.is_completed = true;
+							  row.completed_at = new Date().toISOString();
+							  row.completed_by = currentUser.username;
+							  
+							  const res = await api.UpdateObj(row);
+							  successMessage(res.msg as string);
+							} catch (error) {
+							  errorMessage("完成操作失败");
+							  console.error(error);
+							}
+						  }
 						}
 					  }
 					}
