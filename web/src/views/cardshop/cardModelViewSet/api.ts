@@ -50,3 +50,11 @@ export function exportData(params:any){
 }
 
 
+export function GetCardKey(data: any) {
+	return request({
+		url: apiPrefix + 'get_card_key/',
+		method: 'get',
+		params: data,
+	});
+}
+

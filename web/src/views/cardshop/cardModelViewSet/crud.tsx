@@ -53,6 +53,14 @@ export default function ({ crudExpose, context }: CreateCrudOptionsProps): Creat
 							return exportRequest(crudExpose!.getSearchFormData());
 						},
 					},
+					GetKey: {
+						text: '获取卡密', //按钮文字
+						title: '获取卡密', //鼠标停留显示的信息
+						show: auth('user:Export'),
+						click() {
+							context?.handleGetCardKeyOpen();
+						},
+					},
 				},
 			},
 			rowHandle: {
@@ -61,8 +69,11 @@ export default function ({ crudExpose, context }: CreateCrudOptionsProps): Creat
 				width: 400,
 				buttons: {
 					remove: {
-						show: auth("orderModelViewSet:Delete")
-						,
+						show: auth("orderModelViewSet:Delete"),
+					},
+					edit:
+					{
+						show: auth("orderModelViewSet:Delete"),
 					},
 					outbound: {
 						text: '出库',
@@ -90,6 +101,17 @@ export default function ({ crudExpose, context }: CreateCrudOptionsProps): Creat
 				},
 				walletNo: {
 					title: '钱包编号',
+					search: { show: false},
+					column: {
+						minWidth: 120,
+						sortable: 'custom',
+					},
+					form: {
+						show: true,
+					},
+				},
+				delivered_by: {
+					title: '出库人',
 					search: { show: false},
 					column: {
 						minWidth: 120,

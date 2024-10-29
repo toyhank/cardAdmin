@@ -7,11 +7,41 @@ import { ElMessage } from "element-plus";
 import {successMessage,errorMessage} from '../../../utils/message';
 import { useUserInfo } from '/@/stores/userInfo';
 import { defineComponent } from 'vue';
-import { ref } from 'vue';
+import { ref,onMounted } from 'vue';
 import { nextTick } from 'vue'
+import layout1 from './search.vue'
+
 //此处为crudOptions配置
 export default function ({ crudExpose, context }: CreateCrudOptionsProps): CreateCrudOptionsRet {
 	const fooRef = ref(0)
+	const accountTypeOptions = ref([]);
+	const isLoading = ref(true); // 添加加载状态
+	// const fetchAccountTypes = async () => {
+    //     try {
+    //         const res = await request({
+    //             url: '/api/orderTypeModelViewSet/',
+    //             method: 'get'
+    //         });
+    //         accountTypeOptions.value = res.data.map((item: any) => ({
+    //             value: item.order_type_string,
+    //             label: item.order_type_string
+    //         }));
+    //     } catch (error) {
+    //         console.error('获取账号类型失败', error);
+    //     }
+    // };
+	// const init = async () => {
+	// 	await fetchAccountTypes();
+	//   };
+	
+	//   // 在这里你可以调用 init 函数，或者将其传递给外部
+	// init();
+	// console.log(11111)
+	// console.log(accountTypeOptions.value)
+	// const accountTypeDict = compute(() => {
+	// 	return isLoading.value ? [] : accountTypeOptions.value; // 返回空数组直到数据加载完成
+	//   });
+
 	context.fooRef = fooRef //将fooRef 通过context传递给index.vue
 	const pageRequest = async (query: any) => {
 		return await api.GetList(query);
@@ -29,6 +59,11 @@ export default function ({ crudExpose, context }: CreateCrudOptionsProps): Creat
 		const userStore = useUserInfo();
 		const currentUser = userStore.userInfos;
 		form.create_by = currentUser.name;
+		const today = new Date().toISOString().split('T')[0];
+		const todayOrders = await api.getTypeOrderNumber({type:form.account_type});
+		const orderCount = todayOrders.type_orders;
+		const suffix = (orderCount + 1).toString().padStart(3, '0');
+		form.order_no = form.account_type + suffix;
 		return await api.AddObj(form);
 	};
 
@@ -67,8 +102,22 @@ export default function ({ crudExpose, context }: CreateCrudOptionsProps): Creat
         }
     };
 
+    // 创建一个ref来存储账号类型数据
+    // 
+
+    // 在组件创建时获取账号类型数据
+
+
+    //立即调用获取账号类型的函数
+
 	return {
 		crudOptions: {
+
+			tabs:{
+				show: true,
+				name:'account_type', //对应查询字段key
+
+			},
 			request: {
 				pageRequest,
 				addRequest,
@@ -93,7 +142,7 @@ export default function ({ crudExpose, context }: CreateCrudOptionsProps): Creat
 			rowHandle: {
 				//固定右侧
 				fixed: 'right',
-				width: 400,
+				width: 430,
 				buttons: {
 					custom: {
 						text: '取消',
@@ -114,7 +163,12 @@ export default function ({ crudExpose, context }: CreateCrudOptionsProps): Creat
 					},
 					customDialog: {
 						text: '入库',
-						show: true,
+						show: compute(({ row }) => {
+							if(row.order_type == '现号')
+								return true;
+							else 
+								return false;
+						}),
 						click: (ctx: any) => {
 							const { row } = ctx;
 							context?.handleAddOrderOpen(row);
@@ -124,12 +178,46 @@ export default function ({ crudExpose, context }: CreateCrudOptionsProps): Creat
 						show: auth("orderModelViewSet:Delete")
 						,
 					},
+					edit:
+					{
+						show: auth("orderModelViewSet:Delete"),
+					},
+					hideColumn: {
+						text: '隐藏',
+						show:compute(({ row }) => {
+							if(!row.is_completed)
+								return false;
+							else 
+								return true;
+						}),
+						
+						click: async (ctx) => {
+							console.log("hide");
+							// 隐藏当前列的逻辑
+							try {
+								const { row } = ctx;
+								if (row.is_completed) {
+									row.is_hide = true;
+									await api.UpdateObj(row);
+									successMessage('订单已隐藏');
+									// 刷新页面
+									crudExpose.doRefresh();
+								} else {
+									errorMessage('只能隐藏已完成的订单');
+								}
+							} catch (error) {
+								errorMessage('隐藏订单失败');
+								console.error(error);
+							}
+						},
+					},
 				},
 				
 			},
 			columns: {
 				created_at: {
 					title: '创建时间',
+					type: 'date',
 					search: { show: false},
 					column: {
 						minWidth: 120,
@@ -139,12 +227,25 @@ export default function ({ crudExpose, context }: CreateCrudOptionsProps): Creat
 						show: false,
 					},
 				},
-				
+
+				order_no: {
+					title: '订单编号',
+					type: 'text',
+					search: { show: true},
+					column: {
+						minWidth: 120,
+						sortable: 'custom',
+					},
+					form: {
+						show: false,
+					},
+				},
 				customer_id: {
 					title: '客户编码',
 					type: 'input',
-					search: { show: true},
+					search: { show: false},
 					column: {
+						show:false,
 						minWidth: 120,
 						sortable: 'custom',
 					},
@@ -152,6 +253,28 @@ export default function ({ crudExpose, context }: CreateCrudOptionsProps): Creat
 
 						component: {
 							placeholder: '客户编码',
+						},
+					},
+				},
+				
+				order_type: {
+					title: '订单类型',
+					type: 'dict-select',
+					search: { show: true},
+					column: {
+						minWidth: 120,
+						sortable: 'custom',
+					},
+					dict: dict({
+						data: [
+							{ value: '现号', label: '现号' },
+							{ value: '代充', label: '代充' }
+						]
+					}),
+					form: {
+						value:'代充',
+						component: {
+							placeholder: '请选择类型',
 						},
 					},
 				},
@@ -176,18 +299,9 @@ export default function ({ crudExpose, context }: CreateCrudOptionsProps): Creat
 					type: 'dict-select',
 					search: { show: true },
 					dict: dict({
-						getData: async () => {
-							const res = await request({
-								url: '/api/orderTypeModelViewSet/',
-								method: 'get'
-							});
-							return res.data.map((item: any) => ({
-								value: item.order_type_string,
-								label: item.order_type_string
-							}));
-						},
-						immediate: true,
-						cache: true
+						url: '/api/orderTypeModelViewSet/',
+						value: 'order_type_string',
+						label: 'order_type_string'
 					}),
 					column: {
 						minWidth: 120,
@@ -227,6 +341,7 @@ export default function ({ crudExpose, context }: CreateCrudOptionsProps): Creat
 						}
 					},
 					form: {
+						value:"普通",
 						component: {
 							placeholder: '请选择优先级',
 						},

@@ -143,22 +143,87 @@ export default function ({ crudExpose, context }: CreateCrudOptionsProps): Creat
 						},
 					},
 				},
-                ticket_content: {
-					title: '工单内容',
-					type: 'text',
-					search: { show: false },
+                // ticket_content: {
+				// 	title: '工单内容',
+				// 	type: 'text',
+				// 	search: { show: false },
+				// 	column: {
+				// 		minWidth: 120,
+				// 		sortable: 'custom',
+				// 	},
+				// 	form: {
+				// 		rules: [{ required: true, message: '账密必填' }],
+				// 		component: {
+				// 			placeholder: '请输入账密',
+				// 		},
+				// 	},
+				// },
+				ticket_content: {
+					title: "内容",
+					column: {
+					  width: 300,
+					  show: false
+					},
+					type: ["editor-wang5"], // 富文本图片上传依赖file-uploader，请先配置好file-uploader
+					form: {
+					  // 动态显隐字段
+					  // show: compute(({ form }) => {
+					  //   return form.change === "wang";
+					  // }),
+					  col: {
+						span: 24
+					  },
+					  rules: [
+						{
+						  required: true,
+						  message: "此项必填",
+						  validator: async (rule, value) => {
+							if (value.trim() === "<p><br></p>") {
+							  throw new Error("内容不能为空");
+							}
+						  }
+						}
+					  ],
+					  component: {
+						disabled: compute(({ form }) => {
+						  return form.disabled;
+						}),
+						id: "1", // 当同一个页面有多个editor时，需要配置不同的id
+						config: {},
+						uploader: {
+						  type: "form",
+						  buildUrl(res) {
+							return res.url;
+						  }
+						}
+					  }
+					}
+				  },
+
+				  ticket_type: {
+					title: '工单分类',
+					type: 'dict-select',
+					search: { show: true },
+					dict: dict({
+						data: [
+							{ value: '钱包问题', label: '钱包问题' },
+							{ value: 'id问题', label: 'id问题' },
+							{ value: '账号问题', label: '账号问题' },
+							{ value: '售后问题', label: '售后问题' },
+							{ value: '其他问题', label: '其他问题' }
+						]
+					}),
 					column: {
 						minWidth: 120,
 						sortable: 'custom',
 					},
 					form: {
-						rules: [{ required: true, message: '账密必填' }],
+						value:"钱包问题",
 						component: {
-							placeholder: '请输入账密',
+							placeholder: '工单分类',
 						},
 					},
 				},
-
 				priority: {
 					title: '优先级',
 					type: 'dict-select',
@@ -172,6 +237,7 @@ export default function ({ crudExpose, context }: CreateCrudOptionsProps): Creat
 						]
 					}),
 					column: {
+						
 						minWidth: 120,
 						sortable: 'custom',
 						name: 'el-tag',
@@ -186,6 +252,7 @@ export default function ({ crudExpose, context }: CreateCrudOptionsProps): Creat
 						}
 					},
 					form: {
+						value:'普通',
 						component: {
 							placeholder: '请选择优先级',
 						},

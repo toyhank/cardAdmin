@@ -123,3 +123,11 @@ class orderModelViewSet(CustomModelViewSet):
             'today_orders': today_orders
         })
 
+
+    @action(detail=False, methods=['get'])
+    def type_statistics(self, request):
+        account_type = request.GET.get('type')
+        today_orders = orderModel.get_type_today_orders(account_type)
+        return Response({
+            'type_orders': today_orders,
+        })

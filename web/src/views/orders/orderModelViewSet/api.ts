@@ -64,4 +64,12 @@ export function getOrderNumber(){
 	  });
 }
 
+export function getTypeOrderNumber(params:any){
+	return request({
+		url:apiPrefix + 'type_statistics/',
+		params: params,
+		method: 'get'
+	  });
+}
+
 

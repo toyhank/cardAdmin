@@ -4,7 +4,8 @@ from django.conf import settings
 
 class ticketModel(models.Model):
     ticket_title = models.CharField(default="",null=True, blank=True,max_length=100, verbose_name='工单标题')
-    ticket_content = models.CharField(default="",null=True, blank=True,max_length=100, verbose_name='工单内容')
+    ticket_content = models.TextField(default="",null=True, blank=True, verbose_name='工单内容')
+    ticket_type = models.TextField(default="",null=True, blank=True, verbose_name='工单分类')
     create_by = models.CharField(null=True, blank=True,default="",max_length=100, verbose_name='创建人')
     assigned_by = models.CharField(default="",null=True, blank=True,max_length=100, verbose_name='接单人')
     is_completed = models.BooleanField(default=False, verbose_name='完结')

@@ -109,10 +109,10 @@ const handleAddOrderClose = () => {
 };
 
 const handleAddOrderSubmit = async () => {
-  if (!addOrderForm.walletNo || !addOrderForm.cardNo || !addOrderForm.cardId) {
-    ElMessage.warning('请填写所有字段');
-    return;
-  }
+  // if (!addOrderForm.walletNo || !addOrderForm.cardNo || !addOrderForm.cardId) {
+  //   ElMessage.warning('请填写所有字段');
+  //   return;
+  // }
   
   try {
     // 这里需要替换为实际的API调用

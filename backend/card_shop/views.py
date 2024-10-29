@@ -6,40 +6,8 @@ from rest_framework import serializers
 from card_shop.serializers import cardModelSerializer, cardModelCreateUpdateSerializer
 from dvadmin.utils.viewset import CustomModelViewSet
 from rest_framework.permissions import AllowAny  # 导入所需权限类
-
-
-# class ExportOrderModelSerializer(orderModelSerializer):
-#     """
-#     订单导出序列化器
-#     """
-#     customer_id = serializers.CharField(read_only=True)
-#     account_info = serializers.CharField(read_only=True)
-#     is_accepted = serializers.BooleanField(read_only=True)
-#     only_assigned_to = serializers.CharField(read_only=True)
-#     assigned_by = serializers.CharField(read_only=True)
-#     #created_by = serializers.CharField(read_only=True)
-#     is_completed = serializers.SerializerMethodField()
-#     created_at = serializers.DateTimeField(format="%Y-%m-%d %H:%M:%S", read_only=True)
-#     assigned_at = serializers.DateTimeField(format="%Y-%m-%d %H:%M:%S", read_only=True)
-#     completed_at = serializers.DateTimeField(format="%Y-%m-%d %H:%M:%S", read_only=True)
-#     priority = serializers.CharField(read_only=True)
-#     account_type = serializers.CharField(read_only=True)
-    
-#     def get_priority(self, obj):
-#         return obj.get_priority_display()
-    
-#     def get_account_type(self, obj):
-#         return obj.get_account_type_display()
-
-#     def get_is_completed(self, obj):
-#         return "已完成" if obj.is_completed else "未完成"
-
-#     class Meta:
-#         model = orderModel
-#         fields = [
-#             'created_at','customer_id','account_info','account_type','priority','only_assigned_to','assigned_by','is_accepted','is_completed', 'assigned_at','completed_at'
-#         ]
-
+from rest_framework.response import Response
+from rest_framework.decorators import action
 
 class ImportCardSerializer(cardModelSerializer):
     """
@@ -113,4 +81,20 @@ class cardModelViewSet(CustomModelViewSet):
         'id': 'id',
         'created_by': '创建人',
     }
+
+    @action(detail=False, methods=['get'])
+    def get_card_key(self, request):
+        account_type = request.GET.get('account_type')
+        count = request.GET.get('count')
+        delivered_by = request.GET.get('delivered_by')
+        sales_destination = request.GET.get('sales_destination')
+        sales = request.GET.get('sales')
+        
+        try:
+            card_keys = cardModel.batch_deliver(account_type, count, delivered_by, sales_destination, sales)
+            return Response({
+                'card_keys': card_keys,
+            })
+        except ValueError as e:
+            return Response({'error': str(e)}, status=400)
 

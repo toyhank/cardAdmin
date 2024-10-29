@@ -47,8 +47,10 @@ export default {
                         },
                         transformRes: ({res}: any) => {
                             //将pageRequest的返回数据，转换为fast-crud所需要的格式
+                            //过滤掉is_hide为true的字段
+                            const filteredData = res.data.filter((item: any) => !item.is_hide);
                             //return {records,currentPage,pageSize,total};
-                            return {records: res.data, currentPage: res.page, pageSize: res.limit, total: res.total};
+                            return {records: filteredData, currentPage: res.page, pageSize: res.limit, total: res.total};
                         },
                     },
                     form: {
